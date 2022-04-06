@@ -1,5 +1,6 @@
+import 'package:chat_client/one_to_one_chat/list_user_screen.dart';
+import 'package:chat_client/simple_chat/reg_screen.dart';
 import 'package:flutter/material.dart';
-import 'chat_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,117 +17,69 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const RegScreen(),
+      home: const MenuScreen(),
     );
   }
 }
 
-class RegScreen extends StatefulWidget {
-  const RegScreen({Key? key}) : super(key: key);
+class MenuScreen extends StatefulWidget {
+  const MenuScreen({Key? key}) : super(key: key);
 
   @override
-  _RegScreenState createState() => _RegScreenState();
+  State<MenuScreen> createState() => _MenuScreenState();
 }
 
-class _RegScreenState extends State<RegScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  bool _isLoading = false;
-
-  void startChat() {
-    if (_nameController.text.isNotEmpty) {
-      setState(() {
-        _isLoading = true;
-      });
-      Future.delayed(const Duration(seconds: 1), () {
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => ChatScreen(
-                      username: _nameController.text.trim(),
-                    )));
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
+class _MenuScreenState extends State<MenuScreen> {
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
     return Scaffold(
-      body: SafeArea(
-        child: Container(
-          color: const Color(0xFFEAEFF2),
-          height: size.height,
-          width: size.width,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 60),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Flexible(
-                  child:  SizedBox(
-                    width: size.width * 0.80,
-                    child: TextField(
-                      controller: _nameController,
-                      cursorColor: Colors.black,
-                      autofocus: false,
-                      style: const TextStyle(fontSize: 18),
-                      keyboardType: TextInputType.text,
-                      textInputAction: TextInputAction.go,
-                      maxLength: 20,
-                      decoration: const InputDecoration(
-                        labelText: 'Name',
-                        hintText: 'Enter your username',
-                        hintStyle: TextStyle(fontSize: 15),
-                        labelStyle:
-                            TextStyle(fontSize: 15, color: Color(0xFF271160)),
-                        enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF271160))),
-                        focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF271160))),
-                        disabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF271160))),
-                      ),
-                    ),
+      appBar: AppBar(
+        title: const Text('Chat Client'),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.deepPurpleAccent,
                   ),
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => const RegScreen()));
+                  },
+                  child: const Text('Simple Chat'),
                 ),
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 30),
-                  width: size.width * 0.80,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        primary: const Color(0xFF271160)),
-                    onPressed: startChat,
-                    child: _isLoading
-                        ? Transform.scale(
-                            scale: 0.7,
-                            child: const CircularProgressIndicator(
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                                strokeWidth: 2.5),
-                          )
-                        : const Text('Start Chat',
-                            style:
-                                TextStyle(fontSize: 17, color: Colors.white)),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+             Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.deepPurple.shade900,
+                  ),
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => const ListUserScreen()));
+                  },
+                  child: const Text('One to One chat'),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
