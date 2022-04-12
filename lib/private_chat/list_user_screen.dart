@@ -1,5 +1,6 @@
 import 'package:chat_client/model/user_model.dart';
-import 'package:chat_client/one_to_one_chat/chat_list_screen.dart';
+import 'package:chat_client/private_chat/chat_stream.dart';
+import 'package:chat_client/private_chat/online_user_screen.dart';
 import 'package:flutter/material.dart';
 
 class ListUserScreen extends StatefulWidget {
@@ -10,13 +11,11 @@ class ListUserScreen extends StatefulWidget {
 }
 
 class _ListUserScreenState extends State<ListUserScreen> {
-  List<UserModel> users = [
-    UserModel('Nano Nano', '1111'),
-    UserModel('Pendekar Biru', '2222'),
-    UserModel('Hot Hot Pop', '3333'),
-    UserModel('Mentos', '4444'),
-    UserModel('Jagoan Neon', '5555'),
-  ];
+  @override
+  void initState() {
+    chatStream.init();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,27 +25,36 @@ class _ListUserScreenState extends State<ListUserScreen> {
         title: const Text('Choose User'),
         backgroundColor: const Color(0xFF271160),
       ),
-      body: ListView.builder(
-        itemCount: users.length,
-        itemBuilder: (context, index) {
-          return User(
-            imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-            name: users[index].name,
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ChatListScreen(
-                            currentUser: users[index],
-                            friends: users
-                                .where((user) =>
-                                    user.chatID != users[index].chatID)
-                                .toList(),
-                          )));
-            },
-          );
-        },
-      ),
+      body: StreamBuilder<List<UserModel>>(
+          stream: chatStream.availableUsers,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            return ListView.builder(
+              itemCount: snapshot.data?.length,
+              itemBuilder: (context, index) {
+                var user = snapshot.data?[index];
+                return User(
+                  imageUrl:
+                      'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                  name: user?.username ?? '-',
+                  onTap: () {
+                    chatStream.onUserSelected(user ?? UserModel());
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => OnlineUserScreen(
+                                  currentUser: user ?? UserModel(),
+                                )));
+                  },
+                );
+              },
+            );
+          }),
     );
   }
 }

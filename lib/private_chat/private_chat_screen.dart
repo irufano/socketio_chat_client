@@ -1,26 +1,28 @@
-import 'package:chat_client/model/chat_model.dart';
+import 'dart:developer';
+
+import 'package:chat_client/model/private_chat_model.dart';
+import 'package:chat_client/model/user_model.dart';
+import 'package:chat_client/private_chat/chat_stream.dart';
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
-class ChatScreen extends StatefulWidget {
-  final String username;
-  const ChatScreen({
+class PrivateChatScreen extends StatefulWidget {
+  final UserModel senderUser;
+  final UserModel receiverUser;
+  const PrivateChatScreen({
     Key? key,
-    required this.username,
+    required this.senderUser,
+    required this.receiverUser,
   }) : super(key: key);
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  _PrivateChatScreenState createState() => _PrivateChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _PrivateChatScreenState extends State<PrivateChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatModel> _messages = [];
-
-  // final bool _showSpinner = false;
-  // final bool _showVisibleWidget = false;
-  // final bool _showErrorIcon = false;
+  final List<PrivateChatModel> _messages = [];
 
   void setStateIfMounted(f) {
     if (mounted) setState(f);
@@ -30,36 +32,40 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void initState() {
-    try {
-      socket =
-          io("https://chat-services-irufano.herokuapp.com/", <String, dynamic>{
-        "transports": ["websocket"],
-        "autoConnect": false,
-      });
+    // try {
+    //   socket = io(
+    //       'https://chat-service-complex-irufano.herokuapp.com/',
+    //       OptionBuilder()
+    //           .setTransports(['websocket']) // for Flutter or Dart VM
+    //           .setQuery({'chatID': widget.senderUser.userId}) // optional
+    //           .disableAutoConnect()
+    //           .build());
 
-      socket.connect();
+    //   socket.connect();
 
-      // ignore: avoid_print
-      socket.onConnectError((data) => print('error :' + data));
+    //   socket.onConnectError((data) => debugPrint('error :' + data));
 
-      socket.on('connect', (data) {
-        debugPrint('connected');
-        // ignore: avoid_print
-        print(socket.connected);
-      });
+    //   socket.on('connect', (data) {
+    //     debugPrint('connected');
 
-      socket.on('message', (data) {
-        var message = ChatModel.fromJson(data);
-        setStateIfMounted(() {
-          _messages.add(message);
-        });
-      });
+    //     debugPrint(socket.query);
 
-      socket.onDisconnect((_) => debugPrint('disconnect'));
-    } catch (e) {
-      // ignore: avoid_print
-      print(e);
-    }
+    //     debugPrint(socket.connected.toString());
+    //   });
+
+    //   socket.on('receive_message', (data) {
+    //     // print(data);
+    //     var message = PrivateChatModel.fromJson(data);
+    //     setStateIfMounted(() {
+    //       _messages.add(message);
+    //     });
+    //   });
+
+    //   socket.onDisconnect((_) => debugPrint('disconnect'));
+    // } catch (e) {
+    //   // ignore: avoid_print
+    //   print(e);
+    // }
 
     super.initState();
   }
@@ -70,7 +76,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
           centerTitle: true,
-          title: const Text('Chat Screen'),
+          title: Text(widget.receiverUser.username ?? ''),
           backgroundColor: const Color(0xFF271160)),
       body: SafeArea(
         child: Container(
@@ -82,37 +88,48 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: MediaQuery.removePadding(
                   context: context,
                   removeTop: true,
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    physics: const BouncingScrollPhysics(),
-                    reverse: _messages.isEmpty ? false : true,
-                    itemCount: 1,
-                    shrinkWrap: false,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                            top: 10, left: 10, right: 10, bottom: 3),
-                        child: Column(
-                          mainAxisAlignment: _messages.isEmpty
-                              ? MainAxisAlignment.center
-                              : MainAxisAlignment.start,
-                          children: <Widget>[
-                            Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: _messages.map((message) {
-                                  // ignore: avoid_print
-                                  print(message);
-                                  return ChatBubble(
-                                    date: message.sentAt,
-                                    message: message.message,
-                                    isMe: message.id == socket.id,
-                                  );
-                                }).toList()),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                  child: StreamBuilder<List<PrivateChatModel>>(
+                      stream: chatStream.messages,
+                      builder: (context, snapshot) {
+                        var messages = snapshot.data;
+                        return ListView.builder(
+                          controller: _scrollController,
+                          physics: const BouncingScrollPhysics(),
+                          reverse: (messages?.isEmpty ?? true) ? false : true,
+                          itemCount: 1,
+                          shrinkWrap: false,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                top: 10,
+                                left: 10,
+                                right: 10,
+                                bottom: 3,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: messages?.isEmpty ?? true
+                                    ? MainAxisAlignment.center
+                                    : MainAxisAlignment.start,
+                                children: <Widget>[
+                                  if (messages?.isNotEmpty ?? false)
+                                    Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: messages!.map((message) {
+                                          // ignore: avoid_print
+                                          print(message);
+                                          return ChatBubble(
+                                              date: message.sentAt,
+                                              message: message.message,
+                                              isMe: message.fromChatId ==
+                                                  widget.senderUser.chatId);
+                                        }).toList()),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      }),
                 ),
               ),
               Container(
@@ -146,19 +163,21 @@ class _ChatScreenState extends State<ChatScreen> {
                           if (_messageController.text.trim().isNotEmpty) {
                             String message = _messageController.text.trim();
 
-                            socket.emit(
-                                "message",
-                                ChatModel(
-                                        id: socket.id ?? 'null',
-                                        message: message,
-                                        username: widget.username,
-                                        sentAt: DateTime.now()
-                                            .toLocal()
-                                            .toString()
-                                            .substring(0, 16))
-                                    .toJson());
+                            log(widget.senderUser.chatId.toString());
 
+                            var data = PrivateChatModel(
+                                message: message,
+                                fromChatId: widget.senderUser.chatId ?? '',
+                                toChatId: widget.receiverUser.chatId ?? '',
+                                sentAt: DateTime.now()
+                                    .toLocal()
+                                    .toString()
+                                    .substring(0, 16));
+                            _messages.add(data);
+
+                            chatStream.sendMessage(data);
                             _messageController.clear();
+                            setState(() {});
                           }
                         },
                         mini: true,
