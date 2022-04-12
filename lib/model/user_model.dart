@@ -13,21 +13,25 @@ class UserModel {
     this.userId,
     this.username,
     this.chatId,
+    this.hasNewMessage,
   });
 
   String? userId;
   String? username;
   String? chatId;
+  bool? hasNewMessage;
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         userId: json["userId"],
         username: json["username"],
         chatId: json["chatId"],
+        hasNewMessage: json["hasNewMessage"],
       );
 
   Map<String, dynamic> toJson() => {
         "userId": userId,
         "username": username,
         "chatId": chatId,
+        "hasNewMessage": hasNewMessage,
       };
 }

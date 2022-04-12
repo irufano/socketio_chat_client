@@ -118,6 +118,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
                                         children: messages!.map((message) {
                                           // ignore: avoid_print
                                           print(message);
+                                          chatStream.updateHasNewMessageFromChat(message, false);
                                           return ChatBubble(
                                               date: message.sentAt,
                                               message: message.message,

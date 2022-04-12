@@ -59,8 +59,13 @@ class _OnlineUserScreenState extends State<OnlineUserScreen> {
                         'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
                     name: user?.username ?? '-',
                     isMe: user?.userId == widget.currentUser.userId,
+                    hasNewMessage: user?.hasNewMessage ?? false,
                     onTap: () {
-                      chatStream.resetMessages();
+                      if (user?.hasNewMessage ?? false) {
+                        chatStream.updateHasNewMessage(user ?? UserModel());
+                      } else {
+                        chatStream.resetMessages();
+                      }
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -85,6 +90,7 @@ class FriendItem extends StatefulWidget {
   final String imageUrl;
   final String name;
   final bool isMe;
+  final bool hasNewMessage;
   final Function() onTap;
 
   const FriendItem({
@@ -92,6 +98,7 @@ class FriendItem extends StatefulWidget {
     required this.imageUrl,
     required this.name,
     required this.isMe,
+    required this.hasNewMessage,
     required this.onTap,
   }) : super(key: key);
 
@@ -154,16 +161,18 @@ class _FriendItemState extends State<FriendItem> {
                     ),
                   )
                 : const SizedBox(),
-            // !widget.isMe
-            //     ? const Padding(
-            //         padding: EdgeInsets.only(left: 10.0),
-            //         child: Icon(
-            //           Icons.circle,
-            //           color: Colors.deepPurpleAccent,
-            //           size: 12,
-            //         ),
-            //       )
-            //     : const SizedBox(),
+            !widget.isMe
+                ? widget.hasNewMessage
+                    ? const Padding(
+                        padding: EdgeInsets.only(left: 10.0),
+                        child: Icon(
+                          Icons.circle,
+                          color: Colors.deepPurpleAccent,
+                          size: 12,
+                        ),
+                      )
+                    : const SizedBox()
+                : const SizedBox(),
           ],
         ),
       ),
